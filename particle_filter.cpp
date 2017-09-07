@@ -167,16 +167,13 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			lm_pred.x = particles[i].x + ( observations[j].x * cos( particles[i].theta ) - observations[j].y * sin ( particles[i].theta ) );
 			lm_pred.y = particles[i].y + ( observations[j].x * sin( particles[i].theta ) + observations[j].y * cos ( particles[i].theta ) );
 
-			// check if this observation is within sensor range
-			// if not, then ignore
-			dist = lm_pred.x * lm_pred.x + lm_pred.y * lm_pred.y;
-			if ( true ) //dist < sensor_range * sensor_range )
-				transformed_obs.push_back(lm_pred);
+			transformed_obs.push_back(lm_pred);
 		}
-		
+
+		// if no measurement is in range, then don't update weights
 		// associate transformed observations with map landmarks
 		dataAssociation(transformed_obs, map_landmarks);
-		
+
 		// update weights based on observations and associations
 		for (int j=0;j<transformed_obs.size();j++)
 		{
@@ -185,8 +182,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			mu_x = map_landmarks.landmark_list[transformed_obs[j].id-1].x_f;
 			mu_y = map_landmarks.landmark_list[transformed_obs[j].id-1].y_f;
 			exponent = -( ( x - mu_x )*( x - mu_x ) / ( 2*std_landmark[0]*std_landmark[0] ) + 
-				          ( y - mu_y )*( y - mu_y ) / ( 2*std_landmark[1]*std_landmark[1] ) );
-						
+				( y - mu_y )*( y - mu_y ) / ( 2*std_landmark[1]*std_landmark[1] ) );
+
 			// avoid division by zero
 			if ( fabs( divisor ) > EPSILON )
 				weight_prod *= exp( exponent ) / divisor;
@@ -194,13 +191,13 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 				//ignore zero variance 
 				continue;
 		}
-		
+
 		// update particle weight
-		particles[i].weight = weight_prod;
+		particles[i].weight = weight_prod;			
 		weights[i] = particles[i].weight;
 
 		// calculate weight sum
-		weight_sum += weights[i];	
+		weight_sum += weights[i];		
 	}
 
 	// normalize weights for resampling
